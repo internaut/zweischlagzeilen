@@ -27,6 +27,10 @@ headline_parts = []
 headline_parts_per_type = {}
 
 
+def prnt_utf8(s):
+    print(s.encode('utf-8'))
+
+
 def rand_item_and_index_from_second_half(seq):
     l = len(seq)
     n = int(ceil(l / 2.0))
@@ -62,7 +66,7 @@ def random_headline_parts():
     start_parts_pool = headline_parts_per_type['NORMAL'] + headline_parts_per_type['INTRO']
     start_part = random.choice(start_parts_pool)
 
-    print("> using start part of type '%s'" % start_part.classif)
+    prnt_utf8(u"> using start part of type '%s'" % start_part.classif)
 
     # don't use "introductional" again for 2nd part
     following_parts_pool = headline_parts_per_type['NORMAL'] + headline_parts_per_type['QUOTE']
@@ -73,7 +77,7 @@ def random_headline_parts():
     if start_part.classif == 'INTRO':
         while not second_part and num_tries < MAX_RAND_HEADLINE_GENERATION_RETRIES:
             p = random.choice(following_parts_pool)
-            print("> second part: random choice '%s'" % unicode(p))
+            prnt_utf8(u"> second part: random choice '%s'" % unicode(p))
             if len_of_headline_parts(start_part, p) <= tweet.MAX_CHARS:
                 second_part = p
                 print(">> ok")
@@ -86,22 +90,24 @@ def random_headline_parts():
             rand_word, rand_word_idx = rand_item_and_index_from_second_half(start_part.words)
             first_words = start_part.words[:rand_word_idx + 1]
             try:
-                print("> will lookup neighbours of word '%s' from start part via libleipzig..." % rand_word)
+                prnt_utf8(u"> will lookup neighbours of word '%s' from start part via libleipzig..." % rand_word)
                 neighbours = libleipzig.RightNeighbours(rand_word, NUM_WORD_NEIGHBOURS_LOOKUP)
             except WebFault as e:
-                print('error in libleipzig: %s (%d)' % (str(e), num_webfault_err), file=sys.stderr)
+                print((u'error in libleipzig: %s (%d)' % (str(e), num_webfault_err)).encode('utf-8'), file=sys.stderr)
                 num_webfault_err += 1
                 if num_webfault_err >= MAX_NUM_WEBFAULT_ERR:
+                    return None
+                else:
                     break
 
             for neighbour in neighbours:
                 neighbour_words = neighbour.Nachbar.split(' ')
                 for neighbour_word in neighbour_words:
-                    print(">> trying neighbourhood word '%s'..." % neighbour_word)
+                    prnt_utf8(u">> trying neighbourhood word '%s'..." % neighbour_word)
                     p_candidate, candidate_idx = find_part_with_word(following_parts_pool, neighbour_word)
 
                     if p_candidate and p_candidate != start_part:
-                        print(">>> found matching candidate %s" % unicode(p_candidate))
+                        prnt_utf8(u">>> found matching candidate %s" % unicode(p_candidate))
                         last_words = p_candidate.words[candidate_idx:]
 
                         # we should have at least 2 additional words and we should not exceed the twitter limit
@@ -152,7 +158,7 @@ def main():
         for h_link, h_text in headlines_per_source:
             h_text_lc = h_text.lower()
             if any((w.lower() in h_text_lc for w in WORD_BLACKLIST)):
-                print("> headline dismissed: '%s'" % h_text)
+                prnt_utf8(u"> headline dismissed: '%s'" % h_text)
                 continue
 
             for cut_str in CUT_SUBSTRINGS:
@@ -162,7 +168,7 @@ def main():
             headlines.append(h)
             headline_parts.extend(h.parts)
             for p in h.parts:
-                if not p.classif in headline_parts_per_type:
+                if p.classif not in headline_parts_per_type:
                     headline_parts_per_type[p.classif] = []
                 headline_parts_per_type[p.classif].append(p)
 
@@ -177,13 +183,13 @@ def main():
     if rand_headline_parts:
         final_headline = ''
         for p in rand_headline_parts:
-            print('>> random headline part object: %s' % unicode(p))
-            print('>>> taken from original headline: %s' % unicode(p.headline))
+            prnt_utf8(u'>> random headline part object: %s' % unicode(p))
+            prnt_utf8(u'>>> taken from original headline: %s' % unicode(p.headline))
             final_headline += p.part_text_consider_chosen_word_range
-            if p.part_text_consider_chosen_word_range[-1] != ' ':
+            if final_headline[-1] != ' ':
                 final_headline += ' '
         final_headline = final_headline.strip()
-        print('> final generated headline: %s' % final_headline)
+        prnt_utf8(u'> final generated headline: %s' % final_headline)
 
         print('sending tweet...')
         tweet.send(final_headline)
