@@ -8,7 +8,8 @@ feeds = {
     'sz': 'http://suche.sueddeutsche.de/rss/Topthemen',
     'zeit': 'http://newsfeed.zeit.de/index',
     'welt': 'http://www.welt.de/?config=feeds_startseite',
-    'taz': 'http://taz.de/rss.xml'
+    'taz': 'http://taz.de/rss.xml',
+    'bild': 'http://www.bild.de/rss-feeds/rss-16725492,feed=home.bild.html'
 }
 
 

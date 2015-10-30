@@ -12,7 +12,7 @@ from suds import WebFault
 import datasources
 import tweet
 from headline_parser import Headline
-from conf import WORD_BLACKLIST
+from conf import WORD_BLACKLIST, CUT_SUBSTRINGS
 
 NUM_WORD_NEIGHBOURS_LOOKUP = 20
 MAX_RAND_HEADLINE_GENERATION_RETRIES = 100
@@ -154,6 +154,9 @@ def main():
             if any((w.lower() in h_text_lc for w in WORD_BLACKLIST)):
                 print("> headline dismissed: '%s'" % h_text)
                 continue
+
+            for cut_str in CUT_SUBSTRINGS:
+                h_text = h_text.replace(cut_str, '')
 
             h = Headline(h_text, source, h_link)
             headlines.append(h)
