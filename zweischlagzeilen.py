@@ -1,19 +1,194 @@
+# -*- coding: utf-8 -*-
+
+from __future__ import print_function
+import sys
 import random
+from math import ceil
+from functools import reduce
+
 import libleipzig
+from suds import WebFault
 
 import datasources
+import tweet
+from headline_parser import Headline
+from conf import WORD_BLACKLIST
+
+NUM_WORD_NEIGHBOURS_LOOKUP = 20
+MAX_RAND_HEADLINE_GENERATION_RETRIES = 100
+MAX_RAND_HEADLINE_OVERALL_RETRIES = 10
+MAX_NUM_WEBFAULT_ERR = 5
+
+num_webfault_err = 0
+num_rand_headline_retries = 0
+
+headlines = []
+headline_parts = []
+headline_parts_per_type = {}
 
 
-def get_random_headline_from_sources(sources):
-    src_id = random.choice(sources.keys())
-    return src_id, random.choice(sources[src_id])
+def rand_item_and_index_from_second_half(seq):
+    l = len(seq)
+    n = int(ceil(l / 2.0))
+    r = random.randint(n, l) - 1
+
+    return seq[r], r
+
+
+def len_of_headline_parts(*parts):
+    return reduce(lambda total, part: total + len(part.part_text_complete), parts, 0)
+
+
+def len_of_headline_words(words):
+    chars_words = reduce(lambda total, w: total + len(w), words, 0)
+    return chars_words + len(words) - 1     # num. chars of words + spaces in between
+
+
+def find_part_with_word(parts, word):
+    for p in parts:
+        try:
+            i = p.words.index(word)
+            return p, i
+        except ValueError:
+            pass
+    return None, None
+
+
+def random_headline_parts():
+    global num_webfault_err
+
+    # chose random item from "normal" or "introductional" headline parts ("quote" parts should not
+    # be used at the beginning)
+    start_parts_pool = headline_parts_per_type['NORMAL'] + headline_parts_per_type['INTRO']
+    start_part = random.choice(start_parts_pool)
+
+    print("> using start part of type '%s'" % start_part.classif)
+
+    # don't use "introductional" again for 2nd part
+    following_parts_pool = headline_parts_per_type['NORMAL'] + headline_parts_per_type['QUOTE']
+
+    num_tries = 0
+    second_part = None
+
+    if start_part.classif == 'INTRO':
+        while not second_part and num_tries < MAX_RAND_HEADLINE_GENERATION_RETRIES:
+            p = random.choice(following_parts_pool)
+            print("> second part: random choice '%s'" % unicode(p))
+            if len_of_headline_parts(start_part, p) <= tweet.MAX_CHARS:
+                second_part = p
+                print(">> ok")
+            else:
+                print(">> dismissed")
+
+            num_tries += 1
+    elif start_part.classif == 'NORMAL':
+        while not second_part and num_tries < MAX_RAND_HEADLINE_GENERATION_RETRIES:
+            rand_word, rand_word_idx = rand_item_and_index_from_second_half(start_part.words)
+            first_words = start_part.words[:rand_word_idx + 1]
+            try:
+                print("> will lookup neighbours of word '%s' from start part via libleipzig..." % rand_word)
+                neighbours = libleipzig.RightNeighbours(rand_word, NUM_WORD_NEIGHBOURS_LOOKUP)
+            except WebFault as e:
+                print('error in libleipzig: %s (%d)' % (str(e), num_webfault_err), file=sys.stderr)
+                num_webfault_err += 1
+                if num_webfault_err >= MAX_NUM_WEBFAULT_ERR:
+                    break
+
+            for neighbour in neighbours:
+                neighbour_words = neighbour.Nachbar.split(' ')
+                for neighbour_word in neighbour_words:
+                    print(">> trying neighbourhood word '%s'..." % neighbour_word)
+                    p_candidate, candidate_idx = find_part_with_word(following_parts_pool, neighbour_word)
+
+                    if p_candidate and p_candidate != start_part:
+                        print(">>> found matching candidate %s" % unicode(p_candidate))
+                        last_words = p_candidate.words[candidate_idx:]
+
+                        # we should have at least 2 additional words and we should not exceed the twitter limit
+                        if len(last_words) >= 2 and len_of_headline_words(first_words + last_words) <= tweet.MAX_CHARS:
+                            start_part.chosen_word_range = (0, rand_word_idx)
+                            second_part = p_candidate
+                            second_part.chosen_word_range = (candidate_idx,)
+                            print(">>>> ok")
+                            break
+                        else:
+                            print(">>>> dismissed")
+
+                if second_part:
+                    break
+
+                # p_candidate = random.choice(following_parts_pool)
+                # try:
+                #     candidate_idx = p_candidate.words.index(neighbour.Nachbar) - 1
+                #     last_words = p_candidate.words[candidate_idx:]
+                #     # we should have at least 2 additional words and we should not exceed the twitter limit
+                #     if len(last_words) >= 2 and len_of_headline_words(first_words + last_words) <= tweet.MAX_CHARS:
+                #         start_part.chosen_word_range = (0, rand_word_idx)
+                #         second_part = p_candidate
+                #         second_part.chosen_word_range = (candidate_idx,)
+                #         break
+                # except ValueError:
+                #     pass
+
+            num_tries += 1
+
+    return [start_part, second_part] if second_part else None
 
 
 def main():
+    global headlines
+    global headline_parts
+    global headline_parts_per_type
+    global num_rand_headline_retries
+
+    print('authenticating via twitter...')
+    tweet.auth()
+
     print('fetching headlines...')
-    sources = datasources.fetch_titles_from_all_sources()
-    rand_headline = get_random_headline_from_sources(sources)
-    print(rand_headline)
+    raw_headlines = datasources.fetch_titles_from_all_sources()
+
+    print('parsing headlines...')
+    for source, headlines_per_source in raw_headlines.items():
+        for h_link, h_text in headlines_per_source:
+            h_text_lc = h_text.lower()
+            if any((w.lower() in h_text_lc for w in WORD_BLACKLIST)):
+                print("> headline dismissed: '%s'" % h_text)
+                continue
+
+            h = Headline(h_text, source, h_link)
+            headlines.append(h)
+            headline_parts.extend(h.parts)
+            for p in h.parts:
+                if not p.classif in headline_parts_per_type:
+                    headline_parts_per_type[p.classif] = []
+                headline_parts_per_type[p.classif].append(p)
+
+    print('generating random headline...')
+    rand_headline_parts = None
+    while not rand_headline_parts and num_rand_headline_retries < MAX_RAND_HEADLINE_OVERALL_RETRIES:
+        rand_headline_parts = random_headline_parts()
+        if not rand_headline_parts:
+            print('failed to generate a random headline (%d)' % num_rand_headline_retries, file=sys.stderr)
+        num_rand_headline_retries += 1
+
+    if rand_headline_parts:
+        final_headline = ''
+        for p in rand_headline_parts:
+            print('>> random headline part object: %s' % unicode(p))
+            print('>>> taken from original headline: %s' % unicode(p.headline))
+            final_headline += p.part_text_consider_chosen_word_range
+            if p.part_text_consider_chosen_word_range[-1] != ' ':
+                final_headline += ' '
+        final_headline = final_headline.strip()
+        print('> final generated headline: %s' % final_headline)
+
+        print('sending tweet...')
+        tweet.send(final_headline)
+    else:
+        print('maximum number of random headline generation retries exceeded' % num_rand_headline_retries,
+              file=sys.stderr)
+
+    print('done.')
 
 
 if __name__ == '__main__':

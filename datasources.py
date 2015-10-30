@@ -24,5 +24,6 @@ def fetch_titles_from_all_sources():
     for feed_id in feeds:
         # print(feed_id)
         titles[feed_id] = fetch_titles(feed_id)
+        print('> %s: %d entries' % (feed_id, len(titles[feed_id])))
 
     return titles

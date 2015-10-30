@@ -1,6 +1,7 @@
 import tweepy
 from conf import *
 
+MAX_CHARS = 140
 
 auth_handler = None
 api = None

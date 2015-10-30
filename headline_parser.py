@@ -4,10 +4,11 @@ import re
 
 
 CLASSIFICATIONS = (
-    (('INTRODUCTIONAL', 'NORMAL'), ':'),
+    (('INTRO', 'NORMAL'), ':'),
     (('NORMAL', 'NORMAL'), ','),
     (('NORMAL', 'NORMAL'), '.'),
     (('NORMAL', 'NORMAL'), '!'),
+    (('NORMAL', 'NORMAL'), '?'),
     (('QUOTE', ), '"')
 )
 
@@ -18,6 +19,7 @@ class HeadlinePart(object):
     def __init__(self, headline, part_text, classif, classif_char=None):
         self._part_text = None
         self._words = []
+        self.chosen_word_range = None
 
         self.headline = headline    # Headline object
         self.part_text = part_text
@@ -47,16 +49,40 @@ class HeadlinePart(object):
     def part_text_complete(self):
         if self.classif == 'QUOTE':
             return self.classif_char + self.part_text + self.classif_char
-        if self.classif == 'INTRODUCTIONAL':
+        if self.classif == 'INTRO':
             return self.part_text + self.classif_char + ' '
         return self.part_text
+
+    @property
+    def part_text_consider_chosen_word_range(self):
+        if self.classif == 'NORMAL':
+            return self.joined_words
+        else:
+            return self.part_text_complete
+
+    @property
+    def joined_words(self):
+        if not self.chosen_word_range:
+            w = self.words
+        else:
+            w_start = self.chosen_word_range[0]
+            if len(self.chosen_word_range) == 1:
+                w = self.words[w_start:]
+            elif len(self.chosen_word_range) == 2:
+                w = self.words[w_start:self.chosen_word_range[1]]
+            else:
+                w = self.words
+
+        return ' '.join(w)
 
     @property
     def words(self):
         return self._words
 
     def __unicode__(self):
-        return u"classif=%s, part_text='%s'" % (self.classif, self.part_text)
+        word_range = ','.join((str(i) for i in self.chosen_word_range)) if self.chosen_word_range else 'None'
+        return u"classif=%s, part_text='%s', chosen_word_range=%s" \
+               % (self.classif, self.part_text, word_range)
 
 
 class Headline(object):
@@ -69,7 +95,7 @@ class Headline(object):
         self.full_headline = headline
 
     def __unicode__(self):
-        return self.full_headline
+        return u"full_headline='%s', source='%s', url='%s'" % (self.full_headline, self.source, self.url)
 
     @property
     def full_headline(self):
