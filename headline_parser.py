@@ -2,36 +2,38 @@
 
 import re
 
-
 CLASSIFICATIONS = (
-    (('INTRO', 'NORMAL'), ':'),
-    (('NORMAL', 'NORMAL'), ','),
-    (('NORMAL', 'NORMAL'), '.'),
-    (('NORMAL', 'NORMAL'), '!'),
-    (('NORMAL', 'NORMAL'), '?'),
-    (('QUOTE', ), '"')
+    (('INTRO', 'NORMAL'), u':'),
+    (('NORMAL', 'NORMAL'), u','),
+    (('NORMAL', 'NORMAL'), u'.'),
+    (('NORMAL', 'NORMAL'), u'!'),
+    (('NORMAL', 'NORMAL'), u'?'),
+    (('NORMAL', 'NORMAL'), u' - '),
+    (('NORMAL', 'NORMAL'), u' – '),
+    (('QUOTE',), u'"'),
+    (('QUOTE',), (u'„', u'“')),
 )
 
 
 class HeadlinePart(object):
     _split_pttrn = re.compile('\s+')
+    _clean_front_pttrn = re.compile('^\W+', re.UNICODE)
+    _clean_back_pttrn = re.compile('\W+$', re.UNICODE)
 
     def __init__(self, headline, part_text, classif, classif_char=None):
         self._part_text = None
         self._words = []
         self.chosen_word_range = None
 
-        self.headline = headline    # Headline object
+        self.headline = headline  # Headline object
         self.part_text = part_text
         self.classif = classif
         self.classif_char = classif_char
 
     def __eq__(self, other):
-        b = (self.headline == other.headline
+        return (self.headline == other.headline
                 and self.part_text == other.part_text
                 and self.classif == other.classif)
-        # print('%s == %s : %s' % (self, other, str(b)))
-        return b
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -42,13 +44,15 @@ class HeadlinePart(object):
 
     @part_text.setter
     def part_text(self, value):
+        value = self._clean_front_pttrn.sub('', value)
+        value = self._clean_back_pttrn.sub('', value)
         self._part_text = value
-        self._words = self._split_pttrn.split(self._part_text)
+        self._words = self._split_pttrn.split(value)
 
     @property
     def part_text_complete(self):
         if self.classif == 'QUOTE':
-            return self.classif_char + self.part_text + self.classif_char
+            return self.classif_char[0] + self.part_text + self.classif_char[1]
         if self.classif == 'INTRO':
             return self.part_text + self.classif_char + ' '
         return self.part_text
@@ -112,7 +116,7 @@ class Headline(object):
             if all(b):
                 self._parts.append(part)
 
-        if not self._parts:     # none of the above classifications worked, so assume that this is a "normal" headline
+        if not self._parts:  # none of the above classifications worked, so assume that this is a "normal" headline
             headline_part = HeadlinePart(self, value, 'NORMAL')
             self._parts.append(headline_part)
 
@@ -140,8 +144,14 @@ class Headline(object):
         res = []
 
         if classif[0] == 'QUOTE':
-            if headline.count(char) == 2:    # must occur exactly twice
-                pttrn = r'%s([\w\d -.!/]+)%s' % (char, char)
+            if type(char) == tuple:
+                count_char = char[0]
+            else:
+                count_char = char
+                char = (char, char)
+
+            if headline.count(count_char) > 0:
+                pttrn = r'%s([\w\d -.!/]+)%s' % (char[0], char[1])
                 m = re.search(pttrn, headline)
                 try:
                     if m:

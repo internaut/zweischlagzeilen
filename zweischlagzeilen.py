@@ -61,14 +61,14 @@ def find_part_with_word(parts, word):
 def random_headline_parts():
     global num_webfault_err
 
-    # chose random item from "normal" or "introductional" headline parts ("quote" parts should not
+    # chose random item from "normal" or "introductory" headline parts ("quote" parts should not
     # be used at the beginning)
     start_parts_pool = headline_parts_per_type['NORMAL'] + headline_parts_per_type['INTRO']
     start_part = random.choice(start_parts_pool)
 
     prnt_utf8(u"> using start part of type '%s'" % start_part.classif)
 
-    # don't use "introductional" again for 2nd part
+    # don't use "introductory" again for 2nd part
     following_parts_pool = headline_parts_per_type['NORMAL'] + headline_parts_per_type['QUOTE']
 
     num_tries = 0
