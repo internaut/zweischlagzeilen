@@ -6,7 +6,7 @@ Der Quellcode ist ein in Python 2 geschriebenes Skript namens "zweischlagzeilen"
 
 --
 
-[@ZwoSchlagzeilen](https://twitter.com/ZwoSchlagzeilen) is a Twitter-Bot that mixes recent headlines of leading German newspapers and posts one of them each hour. It is basically the German variant for the American archetype [@TwoHeadlines](https://twitter.com/TwoHeadlines).
+[@ZwoSchlagzeilen](https://twitter.com/ZwoSchlagzeilen) is a Twitter-Bot that mixes recent headlines of leading German newspapers and posts one of them each hour. Sometimes it produces funny results. It is basically the German variant for the American archetype [@TwoHeadlines](https://twitter.com/TwoHeadlines).
 
 The source code is a Python 2 script named "zweischlagzeilen" and can be examined here.
 
