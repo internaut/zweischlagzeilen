@@ -123,19 +123,6 @@ def random_headline_parts():
                 if second_part:
                     break
 
-                # p_candidate = random.choice(following_parts_pool)
-                # try:
-                #     candidate_idx = p_candidate.words.index(neighbour.Nachbar) - 1
-                #     last_words = p_candidate.words[candidate_idx:]
-                #     # we should have at least 2 additional words and we should not exceed the twitter limit
-                #     if len(last_words) >= 2 and len_of_headline_words(first_words + last_words) <= tweet.MAX_CHARS:
-                #         start_part.chosen_word_range = (0, rand_word_idx)
-                #         second_part = p_candidate
-                #         second_part.chosen_word_range = (candidate_idx,)
-                #         break
-                # except ValueError:
-                #     pass
-
             num_tries += 1
 
     return [start_part, second_part] if second_part else None

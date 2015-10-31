@@ -73,7 +73,7 @@ class HeadlinePart(object):
             if len(self.chosen_word_range) == 1:
                 w = self.words[w_start:]
             elif len(self.chosen_word_range) == 2:
-                w = self.words[w_start:self.chosen_word_range[1]]
+                w = self.words[w_start:self.chosen_word_range[1] + 1]
             else:
                 w = self.words
 
