@@ -14,6 +14,8 @@ import tweet
 from headline_parser import Headline
 from conf import WORD_BLACKLIST, CUT_SUBSTRINGS
 
+SEND_TWEET = True
+
 NUM_WORD_NEIGHBOURS_LOOKUP = 20
 MAX_RAND_HEADLINE_GENERATION_RETRIES = 100
 MAX_RAND_HEADLINE_OVERALL_RETRIES = 10
@@ -29,6 +31,10 @@ headline_parts_per_type = {}
 
 def prnt_utf8(s):
     print(s.encode('utf-8'))
+
+
+def ucfirst(s):
+    return s[0].upper() + s[1:]
 
 
 def rand_item_and_index_from_second_half(seq):
@@ -169,17 +175,25 @@ def main():
 
     if rand_headline_parts:
         final_headline = ''
+        prev_part_was_intro = False
         for p in rand_headline_parts:
             prnt_utf8(u'>> random headline part object: %s' % unicode(p))
             prnt_utf8(u'>>> taken from original headline: %s' % unicode(p.headline))
-            final_headline += p.part_text_consider_chosen_word_range
+            add_part = p.part_text_consider_chosen_word_range
+            if prev_part_was_intro:
+                add_part = ucfirst(add_part)
+            final_headline += add_part
             if final_headline[-1] != ' ':
                 final_headline += ' '
-        final_headline = final_headline.strip()
+            prev_part_was_intro = p.classif == 'INTRO'
+        final_headline = ucfirst(final_headline.strip())
         prnt_utf8(u'> final generated headline: %s' % final_headline)
 
-        print('sending tweet...')
-        tweet.send(final_headline)
+        if SEND_TWEET:
+            print('sending tweet...')
+            tweet.send(final_headline)
+        else:
+            print('sending tweet disabled.')
     else:
         print('maximum number of random headline generation retries exceeded' % num_rand_headline_retries,
               file=sys.stderr)

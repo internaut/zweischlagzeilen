@@ -3,11 +3,11 @@
 import re
 
 CLASSIFICATIONS = (
-    (('INTRO', 'NORMAL'), u':'),
-    (('NORMAL', 'NORMAL'), u','),
-    (('NORMAL', 'NORMAL'), u'.'),
-    (('NORMAL', 'NORMAL'), u'!'),
-    (('NORMAL', 'NORMAL'), u'?'),
+    (('INTRO', 'NORMAL'), u': '),
+    (('NORMAL', 'NORMAL'), u', '),
+    (('NORMAL', 'NORMAL'), u'. '),
+    (('NORMAL', 'NORMAL'), u'! '),
+    (('NORMAL', 'NORMAL'), u'? '),
     (('NORMAL', 'NORMAL'), u' - '),
     (('NORMAL', 'NORMAL'), u' – '),
     (('QUOTE',), u'"'),
@@ -165,7 +165,8 @@ class Headline(object):
         else:
             if char in headline:
                 char_idx = headline.index(char)
-                parts = (headline[:char_idx], headline[char_idx + 1:])
+                char_len = len(char)
+                parts = (headline[:char_idx], headline[char_idx + char_len:])
 
                 for i, part_text in enumerate(parts):
                     part_text = part_text.strip()
