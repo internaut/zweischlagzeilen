@@ -14,6 +14,10 @@ import tweet
 from conf import N_MAX_TRIES, CUT_SUBSTRINGS
 
 
+def prnt_utf8(s):
+    print(s.encode('utf-8'))
+
+
 def get_random_headline(headlines_per_src):
     provider = random.choice([k for k, v in headlines_per_src.iteritems() if len(v) > 0])
     link, text = random.choice(headlines_per_src[provider])
@@ -82,11 +86,12 @@ while n_tries <= N_MAX_TRIES:
     headline = mix(deepcopy(h1_tagged), deepcopy(h2_tagged))
 
     if headline:
-        print('headline:', headline)
-        print('h1:', h1_text)
-        print('h1 (tagged):', h1_tagged)
-        print('h2:', h2_text)
-        print('h2 (tagged):', h2_tagged)
+        print('headline:')
+        prnt_utf8(headline)
+        print('h1:')
+        prnt_utf8(h1_text)
+        print('h2:')
+        prnt_utf8(h2_text)
         break
 
     n_tries += 1
@@ -99,7 +104,8 @@ for cut_str in CUT_SUBSTRINGS:
 
 if simulate:
     print('simulating. would send tweet:')
-    print(headline)
+    prnt_utf8(headline)
 else:
-    print('sending tweet')
+    print('sending tweet:')
     tweet.send(headline)
+    prnt_utf8(headline)
