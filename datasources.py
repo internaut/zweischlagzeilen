@@ -7,7 +7,7 @@ feeds = {
     'spon': 'http://www.spiegel.de/schlagzeilen/index.rss',
     'sz': 'http://rss.sueddeutsche.de/app/service/rss/alles/index.rss?output=rss',
     'zeit': 'http://newsfeed.zeit.de/index',
-    'welt': 'http://www.welt.de/?config=feeds_startseite',
+    'welt': 'https://www.welt.de/feeds/latest.rss',
     'taz': 'http://taz.de/rss.xml',
     'bild': 'http://www.bild.de/rss-feeds/rss-16725492,feed=home.bild.html'
 }

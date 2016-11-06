@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+from pprint import pprint
 import random
 import sys
 from copy import deepcopy
@@ -21,6 +22,8 @@ def prnt_utf8(s):
 def get_random_headline(headlines_per_src):
     provider = random.choice([k for k, v in headlines_per_src.iteritems() if len(v) > 0])
     link, text = random.choice(headlines_per_src[provider])
+    for cut_str in CUT_SUBSTRINGS:
+        text = text.replace(cut_str, '').strip()
     tokens = nltk.tokenize.word_tokenize(text)
     return link, text, tokens
 
@@ -52,8 +55,9 @@ def mix(tok_a, tok_b):
         tok_b[b_idx] = tok_a[a_idx]
 
     res = u''
+    NO_SPACES_TOKENS = (':', "''", "``", '?', ',')
     for i, (w, pos )in enumerate(tok_b):
-        delim = u'' if pos.startswith(u'$') or i == 0 else u' '
+        delim = u'' if w in NO_SPACES_TOKENS or i == 0 else u' '
         res += delim + w
 
     return res
@@ -77,8 +81,8 @@ headlines_per_src = datasources.fetch_titles_from_all_sources()
 n_tries = 1
 while n_tries <= N_MAX_TRIES:
     print('generating random headline (try: %d)' % n_tries)
-    h1_link, h1_text, h1_tokens = get_random_headline(headlines_per_src)
-    h2_link, h2_text, h2_tokens = get_random_headline(headlines_per_src)
+    _, h1_text, h1_tokens = get_random_headline(headlines_per_src)
+    _, h2_text, h2_tokens = get_random_headline(headlines_per_src)
 
     h1_tagged = tagger.tag(h1_tokens)
     h2_tagged = tagger.tag(h2_tokens)
@@ -90,8 +94,10 @@ while n_tries <= N_MAX_TRIES:
         prnt_utf8(headline)
         print('h1:')
         prnt_utf8(h1_text)
+        #pprint(h1_tagged)
         print('h2:')
         prnt_utf8(h2_text)
+        #pprint(h2_tagged)
         break
 
     n_tries += 1
@@ -99,13 +105,10 @@ else:
     print('no headline could be generated')
     exit()
 
-for cut_str in CUT_SUBSTRINGS:
-    headline = headline.replace(cut_str, '')
-
 if simulate:
     print('simulating. would send tweet:')
-    prnt_utf8(headline)
 else:
     print('sending tweet:')
     tweet.send(headline)
-    prnt_utf8(headline)
+
+prnt_utf8(headline)
