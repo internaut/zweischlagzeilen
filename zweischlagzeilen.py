@@ -14,12 +14,16 @@ import datasources
 import tweet
 from conf import N_MAX_TRIES, CUT_SUBSTRINGS
 
+TWEET_MAX_CHARS = 140
+NO_SPACES_TOKENS = (':', "''", "``", '?', ',')
+
 
 def prnt_utf8(s):
     print(s.encode('utf-8'))
 
 
 def get_random_headline(headlines_per_src):
+    """Return a random headline from a pool of headlines. Return the link, the headline text and the tokens"""
     provider = random.choice([k for k, v in headlines_per_src.iteritems() if len(v) > 0])
     link, text = random.choice(headlines_per_src[provider])
     for cut_str in CUT_SUBSTRINGS:
@@ -29,15 +33,18 @@ def get_random_headline(headlines_per_src):
 
 
 def indices_of_nouns(tokens):
+    """Return indices of tokens that are nouns"""
     return [i for i, (_, pos) in enumerate(tokens) if pos.startswith('N')]
 
 
 def mix(tok_a, tok_b):
-    if random.randint(0, 1) == 1:
+    """Mix two lists of tokens"""
+    if random.randint(0, 1) == 1:    # interchange randomly
         tmp = tok_a
         tok_a = tok_b
         tok_b = tmp
 
+    # get the nouns list
     indices_nouns_a = indices_of_nouns(tok_a)
     n_nouns_a = len(indices_nouns_a)
     indices_nouns_b = indices_of_nouns(tok_b)
@@ -51,11 +58,12 @@ def mix(tok_a, tok_b):
     n_replace = random.randint(1, n_nouns_common)
     replace_indices_a = random.sample(indices_nouns_a, n_replace)   # sample w/o replacement
     replace_indices_b = random.sample(indices_nouns_b, n_replace)   # sample w/o replacement
+    # now mix the tokens -> some nouns from a to b
     for a_idx, b_idx in zip(replace_indices_a, replace_indices_b):
         tok_b[b_idx] = tok_a[a_idx]
 
+    # merge the tokens again to get a sentence
     res = u''
-    NO_SPACES_TOKENS = (':', "''", "``", '?', ',')
     for i, (w, pos )in enumerate(tok_b):
         delim = u'' if w in NO_SPACES_TOKENS or i == 0 else u' '
         res += delim + w
@@ -89,7 +97,7 @@ while n_tries <= N_MAX_TRIES:
 
     headline = mix(deepcopy(h1_tagged), deepcopy(h2_tagged))
 
-    if headline:
+    if headline and len(headline) <= TWEET_MAX_CHARS:
         print('headline:')
         prnt_utf8(headline)
         print('h1:')
