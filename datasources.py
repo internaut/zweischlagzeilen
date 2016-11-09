@@ -9,7 +9,9 @@ feeds = {
     'zeit': 'http://newsfeed.zeit.de/index',
     'welt': 'https://www.welt.de/feeds/latest.rss',
     'taz': 'http://taz.de/rss.xml',
-    'bild': 'http://www.bild.de/rss-feeds/rss-16725492,feed=home.bild.html'
+    'bild': 'http://www.bild.de/rss-feeds/rss-16725492,feed=home.bild.html',
+    'heise': 'http://www.heise.de/newsticker/heise-atom.xml',
+    'tagesspiegel': 'http://www.tagesspiegel.de/contentexport/feed/home',
 }
 
 

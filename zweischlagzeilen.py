@@ -15,7 +15,8 @@ import tweet
 from conf import N_MAX_TRIES, CUT_SUBSTRINGS
 
 TWEET_MAX_CHARS = 140
-NO_SPACES_TOKENS = (':', "''", "``", '?', ',')
+NO_SPACES_TOKENS = (':', "``", '?', '!', ',')
+NO_SPACES_PREV_TOKENS = ("''", )
 
 
 def prnt_utf8(s):
@@ -59,14 +60,18 @@ def mix(tok_a, tok_b):
     replace_indices_a = random.sample(indices_nouns_a, n_replace)   # sample w/o replacement
     replace_indices_b = random.sample(indices_nouns_b, n_replace)   # sample w/o replacement
     # now mix the tokens -> some nouns from a to b
+    print(u'tok_a', tok_a)
+    print(u'tok_b', tok_b)
     for a_idx, b_idx in zip(replace_indices_a, replace_indices_b):
         tok_b[b_idx] = tok_a[a_idx]
 
     # merge the tokens again to get a sentence
     res = u''
+    prev_w = None
     for i, (w, pos )in enumerate(tok_b):
-        delim = u'' if w in NO_SPACES_TOKENS or i == 0 else u' '
+        delim = u'' if w in NO_SPACES_TOKENS or prev_w in NO_SPACES_PREV_TOKENS or i == 0 else u' '
         res += delim + w
+        prev_w = w
 
     return res
 
