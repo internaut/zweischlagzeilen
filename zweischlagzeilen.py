@@ -15,8 +15,8 @@ import tweet
 from conf import N_MAX_TRIES, CUT_SUBSTRINGS
 
 TWEET_MAX_CHARS = 140
-NO_SPACES_TOKENS = (':', "``", '?', '!', ',')
-NO_SPACES_PREV_TOKENS = ("''", )
+NO_SPACES_TOKENS = (':', "''", '?', '!', ',')
+NO_SPACES_PREV_TOKENS = ("``", )
 
 
 def prnt_utf8(s):
@@ -29,7 +29,8 @@ def get_random_headline(headlines_per_src):
     link, text = random.choice(headlines_per_src[provider])
     for cut_str in CUT_SUBSTRINGS:
         text = text.replace(cut_str, '').strip()
-    tokens = nltk.tokenize.word_tokenize(text)
+    tokens = nltk.tokenize.word_tokenize(text, language='german')
+
     return link, text, tokens
 
 
