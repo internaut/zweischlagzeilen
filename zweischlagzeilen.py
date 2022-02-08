@@ -25,12 +25,11 @@ def prnt_utf8(s):
 
 def get_random_headline(headlines_per_src):
     """Return a random headline from a pool of headlines. Return the link, the headline text and the tokens"""
-    provider = random.choice([k for k, v in headlines_per_src.iteritems() if len(v) > 0])
+    provider = random.choice([k for k, v in headlines_per_src.items() if len(v) > 0])
     link, text = random.choice(headlines_per_src[provider])
     for cut_str in CUT_SUBSTRINGS:
         text = text.replace(cut_str, '').strip()
-    tokens = nltk.tokenize.word_tokenize(text, language='german')
-
+    tokens = nltk.tokenize.word_tokenize(text)
     return link, text, tokens
 
 
