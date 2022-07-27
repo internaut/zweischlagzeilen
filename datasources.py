@@ -3,7 +3,7 @@ import feedparser
 
 feeds = {
     'ard': 'http://www.tagesschau.de/xml/rss2',
-    'zdf': 'http://www.heute.de/?view=rss',
+    'zdf': 'https://www.zdf.de/rss/zdf/nachrichten',
     'spon': 'http://www.spiegel.de/schlagzeilen/index.rss',
     'sz': 'http://rss.sueddeutsche.de/app/service/rss/alles/index.rss?output=rss',
     'zeit': 'http://newsfeed.zeit.de/index',
