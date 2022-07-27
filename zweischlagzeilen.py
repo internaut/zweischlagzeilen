@@ -64,13 +64,15 @@ seed_tokens = doc_tokens(corp, select=random_doc, tokens_as_hashes=True)
 print(f'selected random document {random_doc} with text:')
 print(token_seq_to_str(seed_tokens, corp.nlp))
 
-if len(seed_tokens) // 2 < NGRAMS_N:
+last_token_ind = round(len(seed_tokens) * 0.75)
+
+if last_token_ind < NGRAMS_N:
     # seed is too short; in this case a headline is generated "from scratch"
     seed_tokens = None
     print('no seed text')
 else:
     # make a seed text: randomly cut the list of tokens up to half the number of tokens
-    slice_until = random.randint(NGRAMS_N-1, len(seed_tokens) // 2)
+    slice_until = random.randint(NGRAMS_N-1, last_token_ind)
     seed_tokens = seed_tokens[:slice_until]
     print(f'seed text: {token_seq_to_str(seed_tokens, corp.nlp)}')
 
