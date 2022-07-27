@@ -16,10 +16,10 @@ the American archetype [@TwoHeadlines](https://twitter.com/TwoHeadlines).
 
 The script works quite simple. Basically, it uses *[feedparser](https://pythonhosted.org/feedparser/)* to fetch the
 headlines of several RSS newsfeeds of German newspaper websites. Then, it randomly selects one headline as
-"seed headline". An [trigram language model] is built from all but the seed headline. The seed headline is cut at a
-random point so that only up to the first half of it is used as seed input for generating a random sequence of words
-from the trigram model. This sequence of words is the randomly generated headline that is posted to the Twitter account
-using [tweepy](http://www.tweepy.org/).
+"seed headline". An [trigram language model](https://web.stanford.edu/~jurafsky/slp3/3.pdf) is built from all but the
+seed headline. The seed headline is cut at a random point so that only up to the first half of it is used as seed input
+for generating a random sequence of words from the trigram model. This sequence of words is the randomly generated
+headline that is posted to the Twitter account using [tweepy](http://www.tweepy.org/).
 
 
 ## Requirements
