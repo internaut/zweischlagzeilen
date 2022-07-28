@@ -1,12 +1,14 @@
 import os
 import json
 from datetime import datetime
+from io import BytesIO
 from time import mktime
 import logging
 
 import feedparser
+import requests
 
-from conf import HEADLINES_COLLECTION, KEEP_DAYS
+from conf import HEADLINES_COLLECTION, KEEP_DAYS, FEED_FETCH_TIMEOUT
 
 
 logger = logging.getLogger(__name__)
@@ -27,8 +29,17 @@ feeds = {
 
 
 def fetch_titles(feed_id):
+    logger.info('%s feed: fetching entries', feed_id)
+
     feed_url = feeds[feed_id]
-    feed = feedparser.parse(feed_url)
+
+    try:
+        resp = requests.get(feed_url, timeout=FEED_FETCH_TIMEOUT)
+    except requests.ReadTimeout:
+        logger.warning("timeout when reading feed from %s", feed_url)
+        return []
+
+    feed = feedparser.parse(BytesIO(resp.content))
     data = [(e['link'], e['title'], datetime.fromtimestamp(mktime(e['published_parsed'])).isoformat())
             for e in feed['entries']
             if 'link' in e and e['link'] and 'title' in e and e['title']
@@ -43,7 +54,7 @@ def item_is_uptodate(item):
     return (datetime.now() - datetime.fromisoformat(item['date'])).days <= KEEP_DAYS
 
 
-def collect():
+def collect(new=True):
     if os.path.exists(HEADLINES_COLLECTION):
         with open(HEADLINES_COLLECTION) as f:
             collection = json.load(f)
@@ -60,18 +71,19 @@ def collect():
     logger.info('removed %d old items from collection', len(collection) - len(new_collection))
     del collection
 
-    for feed_id in feeds:
-        for link, title, date in fetch_titles(feed_id):
-            if link not in new_collection:
-                item = {
-                    'source': feed_id,
-                    'date': date,
-                    'link': link,
-                    'title': title
-                }
+    if new:
+        for feed_id in feeds:
+            for link, title, date in fetch_titles(feed_id):
+                if link not in new_collection:
+                    item = {
+                        'source': feed_id,
+                        'date': date,
+                        'link': link,
+                        'title': title
+                    }
 
-                if item_is_uptodate(item):
-                    new_collection[item['link']] = item
+                    if item_is_uptodate(item):
+                        new_collection[item['link']] = item
 
     logger.info('storing collection with %d items to disk', len(new_collection))
     with open(HEADLINES_COLLECTION, 'w') as f:

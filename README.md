@@ -48,6 +48,9 @@ CUT_SUBSTRINGS = (
 # location where to store previously fetched headlines
 HEADLINES_COLLECTION = os.path.join('data', 'headlines.json')
 
+# timeout in seconds when fetching a newsfeed
+FEED_FETCH_TIMEOUT = 15
+
 # how long to keep headlines
 KEEP_DAYS = 28
 
